@@ -107,11 +107,43 @@ const Reports = () => {
         }
       });
 
-      // Format for weekly chart
-      const formattedWeeklyData = Object.entries(dailyAggregates).map(([date, stats]) => ({
-        day: new Date(date).toLocaleDateString('en-US', { weekday: 'long' }),
-        present: stats.total_presents,
-        absent: stats.total_absents
+      // Format for chart based on selected date range
+      const chartAggregates: Record<string, { present: number, absent: number }> = {};
+      
+      filteredData.forEach(record => {
+        if (!record || !record.date) return;
+        const recordDate = new Date(record.date);
+        let label = record.date;
+
+        if (dateRange === "Today") {
+          label = "Today";
+        } else if (dateRange === "This Week") {
+          label = recordDate.toLocaleDateString('en-US', { weekday: 'long' });
+        } else if (dateRange === "This Month") {
+          const day = recordDate.getDate();
+          if (day <= 7) label = 'Week 1';
+          else if (day <= 14) label = 'Week 2';
+          else if (day <= 21) label = 'Week 3';
+          else label = 'Week 4';
+        } else if (dateRange === "This Semester") {
+          label = recordDate.toLocaleDateString('en-US', { month: 'short' });
+        }
+
+        if (!chartAggregates[label]) {
+          chartAggregates[label] = { present: 0, absent: 0 };
+        }
+        
+        if (record.status === 'Present') {
+          chartAggregates[label].present += 1;
+        } else if (record.status === 'Absent') {
+          chartAggregates[label].absent += 1;
+        }
+      });
+
+      const formattedWeeklyData = Object.entries(chartAggregates).map(([label, stats]) => ({
+        label: label,
+        present: stats.present,
+        absent: stats.absent
       }));
 
       setWeeklyData(formattedWeeklyData);
@@ -268,7 +300,7 @@ const Reports = () => {
               margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" />
+              <XAxis dataKey="label" />
               <YAxis />
               <Tooltip />
               <Legend />

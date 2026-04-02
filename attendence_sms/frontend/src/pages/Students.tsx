@@ -95,6 +95,7 @@ const Students = () => {
       toast({ title: "Success", description: "Student added" });
       setIsAddModalOpen(false);
       setNewStudent({ name: '', roll_no: '', branch: 'CSE', year: 1, mobile_no: '', biometric_id: null, college: currentCollege });
+      fetchStudents();
     } else {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
@@ -102,8 +103,14 @@ const Students = () => {
 
   const handleDeleteStudent = async (id: string) => {
     if (!confirm("Are you sure?")) return;
-    await supabase.from('total_students').delete().eq('roll_no', id).eq('college', currentCollege);
-    toast({ title: "Deleted", description: "Student record removed" });
+    
+    const { error } = await supabase.from('total_students').delete().eq('roll_no', id).eq('college', currentCollege);
+    if (!error) {
+      toast({ title: "Deleted", description: "Student record removed" });
+      fetchStudents();
+    } else {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
   const handleExport = () => {
@@ -162,6 +169,9 @@ const Students = () => {
               <th className="px-6 py-4">ID</th>
               <th className="px-6 py-4">Name</th>
               <th className="px-6 py-4">Branch</th>
+              <th className="px-6 py-4">Year</th>
+              <th className="px-6 py-4">Mobile No</th>
+              <th className="px-6 py-4">College</th>
               <th className="px-6 py-4">Biometric ID</th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
@@ -172,6 +182,9 @@ const Students = () => {
                 <td className="px-6 py-4">{student.roll_no}</td>
                 <td className="px-6 py-4 font-medium">{student.name}</td>
                 <td className="px-6 py-4">{student.branch}</td>
+                <td className="px-6 py-4">{student.year}</td>
+                <td className="px-6 py-4">{student.mobile_no}</td>
+                <td className="px-6 py-4 text-sm max-w-[150px] truncate" title={student.college}>{student.college}</td>
                 <td className="px-6 py-4">
                   {student.biometric_id ? (
                     <span className="text-green-600 font-mono">ID: {student.biometric_id}</span>
@@ -195,10 +208,20 @@ const Students = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-2xl w-full max-w-md space-y-4">
             <h2 className="text-xl font-bold">Register Student</h2>
-            <input type="text" placeholder="Roll No" className="w-full p-2 border rounded" 
-              value={newStudent.roll_no} onChange={e => setNewStudent({...newStudent, roll_no: e.target.value})} />
-            <input type="text" placeholder="Full Name" className="w-full p-2 border rounded" 
-              value={newStudent.name} onChange={e => setNewStudent({...newStudent, name: e.target.value})} />
+            <div className="grid grid-cols-2 gap-3">
+              <input type="text" placeholder="Roll No" className="w-full p-2 border rounded" 
+                value={newStudent.roll_no} onChange={e => setNewStudent({...newStudent, roll_no: e.target.value})} />
+              <input type="text" placeholder="Full Name" className="w-full p-2 border rounded" 
+                value={newStudent.name} onChange={e => setNewStudent({...newStudent, name: e.target.value})} />
+              <input type="text" placeholder="Branch" className="w-full p-2 border rounded" 
+                value={newStudent.branch} onChange={e => setNewStudent({...newStudent, branch: e.target.value})} />
+              <input type="number" placeholder="Year" className="w-full p-2 border rounded" min="1" max="4"
+                value={newStudent.year} onChange={e => setNewStudent({...newStudent, year: parseInt(e.target.value) || 1})} />
+              <input type="text" placeholder="Mobile Number" className="w-full p-2 border rounded" 
+                value={newStudent.mobile_no} onChange={e => setNewStudent({...newStudent, mobile_no: e.target.value})} />
+              <input type="text" placeholder="College" className="w-full p-2 border rounded" 
+                value={newStudent.college} onChange={e => setNewStudent({...newStudent, college: e.target.value})} />
+            </div>
             
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <span className="text-sm font-medium">Biometric Enrollment</span>
